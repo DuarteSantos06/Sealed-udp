@@ -1,5 +1,5 @@
 use std::net::UdpSocket;
-use sealed_udp::protocol::{ parse_handshake};
+use sealed_udp::protocol::{ parse_handshake, Packet};
 use rand_core::OsRng;
 use x25519_dalek::{EphemeralSecret, PublicKey};
 
@@ -26,7 +26,8 @@ fn main()
         let _public = PublicKey::from(&secret);
         let (_number_of_bytes, _src_addr) = listener.recv_from(&mut buf).expect("recv_from should succeed");
         let handshake = match parse_handshake(&buf){
-            Some(l) =>l,
+            Some(Packet::ClientHello(h)) =>h,
+            Some(Packet::ServerHello(_h)) =>return,
             None => return
         };
         println!("{:?}",handshake.public_key);
