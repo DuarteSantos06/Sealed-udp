@@ -59,3 +59,23 @@ pub fn parse_handshake(buf: &[u8]) -> Option<Packet>
     }
 }
 
+pub fn serialize (packet: &Packet) -> Vec<u8>
+{
+    match packet{
+        Packet::ClientHello(h)=> return construct_buffer(h,CLIENT_HELLO),
+        Packet::ServerHello(h)=> return construct_buffer(h,SERVER_HELLO),
+    }
+} 
+
+fn construct_buffer(handshake: &Handshake,msg_type: u8) -> Vec<u8>
+{
+    let mut buf = vec![0u8; HANDSHAKE_SIZE];
+    buf[MSG_TYPE_OFFSET]=msg_type;
+    buf[VERSION_OFFSET]=handshake.version;
+    buf[CONNECTION_ID_OFFSET..NONCE_OFFSET].copy_from_slice(&handshake.connection_id);
+    buf[NONCE_OFFSET.. PUBLIC_KEY_OFFSET].copy_from_slice(&handshake.nonce);
+    buf[PUBLIC_KEY_OFFSET..HANDSHAKE_SIZE].copy_from_slice(&handshake.public_key);
+    return buf;
+}
+
+
