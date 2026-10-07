@@ -1,7 +1,6 @@
 use std::{ net::UdpSocket};
-use rand_core::{OsRng, RngCore};
-use sealed_udp::protocol::{CONNECTION_ID_SIZE, Handshake, NONCE_SIZE, Packet, VERSION, parse_handshake, serialize};
-use x25519_dalek::{EphemeralSecret, PublicKey};
+use sealed_udp::protocol::{ Handshake, Packet, VERSION, parse_handshake, serialize};
+use sealed_udp::crypto::{generate_keypair, random_connection_id, random_nonce, compute_shared};
 
 
 
@@ -9,15 +8,12 @@ fn main()
 {
     let server_addr = "127.0.0.1:8080";
 
-    let secret = EphemeralSecret::random_from_rng(OsRng);
-    let public = PublicKey::from(&secret);
+    let( secret,public)= generate_keypair();
 
     let socket = UdpSocket::bind("0.0.0.0:0").expect("bind should succeed");
     socket.connect(&server_addr).expect("connect should succeed"); // this connect is different from tcp, it only sets the dest of that socket as server_addr
-    let mut conn_id = [0u8;CONNECTION_ID_SIZE];
-    OsRng.fill_bytes(&mut conn_id);
-    let mut nonce = [0u8; NONCE_SIZE];
-    OsRng.fill_bytes(&mut nonce);
+    let conn_id = random_connection_id();
+    let nonce = random_nonce();
 
     let packet = Packet::ClientHello(Handshake {
         version: VERSION,
@@ -47,9 +43,8 @@ fn main()
         panic!("handshake connection id {:?} different than conn_id {:?}",handshake.connection_id,conn_id);
     }
 
-    let server_public = PublicKey::from(handshake.public_key); // this wraps up again to library type
-    let shared = secret.diffie_hellman(&server_public);
-    println!("{:?}", shared.as_bytes());
+    let shared= compute_shared(secret, handshake.public_key);
+    println!("{:?}", shared);
 
     
 

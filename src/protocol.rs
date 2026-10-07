@@ -34,7 +34,13 @@ pub fn parse_handshake(buf: &[u8]) -> Option<Packet>
     {
         return None;
     }
-    let msg_type : u8 = buf[MSG_TYPE_OFFSET];
+    return get_struct_packet(buf);
+    
+}
+
+fn get_struct_packet(buf: &[u8]) -> Option<Packet>
+{
+   let msg_type : u8 = buf[MSG_TYPE_OFFSET];
     let version : u8 = buf [VERSION_OFFSET];
     let connection_id : [u8; CONNECTION_ID_SIZE ]= buf [CONNECTION_ID_OFFSET..NONCE_OFFSET].try_into().unwrap();
     let nonce : [u8; NONCE_SIZE] = buf [NONCE_OFFSET.. PUBLIC_KEY_OFFSET].try_into().unwrap();
@@ -53,10 +59,8 @@ pub fn parse_handshake(buf: &[u8]) -> Option<Packet>
             nonce, 
             public_key: key_bytes 
         })),
-
         _ => return None 
-
-    }
+    } 
 }
 
 pub fn serialize (packet: &Packet) -> Vec<u8>
