@@ -22,7 +22,6 @@ pub const DATA_HEADER_SIZE : usize = CONNECTION_ID_SIZE + 1;
 pub const CONNECTION_ID_SIZE: usize = 8;
 pub const NONCE_SIZE: usize = 32;
 pub const PUBLIC_KEY_SIZE : usize = 32;
-
 pub const MAX_CHUNK_SIZE : usize = 1200;
 
 pub enum Packet {
@@ -30,6 +29,11 @@ pub enum Packet {
     ServerHello(Handshake),
     Data(DataPacket),
 }
+
+pub struct Connection {
+    pub connection_id: [u8; CONNECTION_ID_SIZE],
+}
+
 
 pub struct DataPacket {
     pub connection_id: [u8; CONNECTION_ID_SIZE],
@@ -43,7 +47,7 @@ pub struct Handshake {
     pub public_key: [u8; PUBLIC_KEY_SIZE],
 }
 
-pub fn parse_handshake(buf: &[u8]) -> Option<Packet>
+pub fn parse_packet(buf: &[u8]) -> Option<Packet>
 {
     if buf.is_empty()
     {
@@ -84,11 +88,11 @@ fn get_struct_packet(buf: &[u8]) -> Option<Packet>
         } 
     }
     else if msg_type == DATA_PACKET{
-        if buf.len()<DATA_HEADER_SIZE
+        if buf.len() < DATA_HEADER_SIZE
         {
             panic!("something wrong happened");
         }
-        if buf.len()-DATA_HEADER_SIZE>MAX_CHUNK_SIZE 
+        if buf.len() - DATA_HEADER_SIZE>MAX_CHUNK_SIZE 
         {
             panic!("something is broken");
         }
