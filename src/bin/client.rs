@@ -1,5 +1,5 @@
 use std::fs::File;
-use std::io::Write;
+use std::io::{Write,Seek,SeekFrom};
 use std::net::UdpSocket;
 
 use sealed_udp::crypto::{compute_shared, generate_keypair, random_connection_id, random_nonce};
@@ -12,30 +12,46 @@ use sealed_udp::protocol::{
 
 const SERVER_ADDR: &str = "127.0.0.1:8080";
 const RECV_BUF_SIZE: usize = 1500;
+const FILENAME: &str = "test-file-200GB.bin";
+
+
 
 type ConnectionId = [u8; CONNECTION_ID_SIZE];
 type RequestId = [u8; REQUEST_ID_SIZE];
 
+
 fn main() {
     let socket = connect(SERVER_ADDR);
+    let mut offset:u64=0;
+    let file = File::create(FILENAME).expect("could not create output file");
 
-    let Some((conn_id, _shared)) = handshake(&socket) else {
-        eprintln!("handshake failed");
-        return;
-    };
+    loop {
+        let Some((conn_id, _shared)) = handshake(&socket) else {
+            eprintln!("handshake failed");
+            return;
+        };
 
-    let Some(request_id) = send_request(&socket, conn_id, "test.txt", 0, MAX_CHUNK_SIZE as u32)
-    else {
-        eprintln!("failed to send request");
-        return;
-    };
+        let Some(request_id) = send_request(&socket, conn_id, FILENAME,offset , MAX_CHUNK_SIZE as u32)
+        else {
+            eprintln!("failed to send request");
+            return;
+        };
+        println!("sent request at {}",offset);
 
-    let Some(response) = receive_response(&socket, request_id) else {
-        eprintln!("no valid response");
-        return;
-    };
+        let Some(response) = receive_response(&socket, request_id) else {
+            eprintln!("no valid response");
+            return;
+        };
 
-    save_to_file("downloaded.txt", &response.data);
+        save_to_file( &response.data,response.offset,&file);
+        println!("dowloaded file at {}",offset);
+        offset+= MAX_CHUNK_SIZE as u64 ;
+        if response.data.len() < MAX_CHUNK_SIZE 
+        {
+            println!("enf of the file");
+            break;
+        }
+    }
 }
 
 /// Bind a local socket and set the server as its default peer.
@@ -116,7 +132,8 @@ fn receive_response(socket: &UdpSocket, request_id: RequestId) -> Option<Respons
     return Some(response);
 }
 
-fn save_to_file(path: &str, data: &[u8]) {
-    let mut file = File::create(path).expect("could not create output file");
+fn save_to_file( data: &[u8], offset: u64,mut file: &File) {
+
+    let _ =file.seek(SeekFrom::Start(offset));
     file.write_all(data).expect("could not write output file");
 }
