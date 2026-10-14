@@ -5,3 +5,4 @@ Cargo.lock
 files
 downloaded.txt
 TODO.md
+.DS_Store
