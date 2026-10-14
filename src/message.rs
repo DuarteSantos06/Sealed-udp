@@ -48,6 +48,10 @@ pub fn parse_message(data: &Vec<u8>) -> Option<Message> {
 }
 
 fn parse_request(data: &Vec<u8>) -> Option<Message> {
+    if data.len() < REQUEST_HEADER_SIZE
+    {
+       panic!("something wrong"); 
+    }
     let request_id: [u8; REQUEST_ID_SIZE] = data[REQUEST_ID_OFFSET..OFFSET_REQUEST_OFFSET]
         .try_into()
         .unwrap();
@@ -67,7 +71,7 @@ fn parse_request(data: &Vec<u8>) -> Option<Message> {
 }
 
 fn parse_response(data: &Vec<u8>) -> Option<Message> {
-    if data.len() < DATA_OFFSET {
+    if data.len() < RESPONSE_HEADER_SIZE {
         panic!("something wrong");
     }
     let request_id: [u8; REQUEST_ID_SIZE] = data[REQUEST_ID_OFFSET..OFFSET_RESPONSE_OFFSET]
@@ -106,7 +110,7 @@ fn serialize_response(r: &Response) -> Vec<u8> {
 fn serialize_request(r: &Request) -> Vec<u8> {
     let mut buf = vec![0u8; REQUEST_HEADER_SIZE + r.filename.len()];
     buf[MESSAGE_TYPE_OFFSET] = REQUEST_TYPE;
-    buf[REQUEST_ID_OFFSET..OFFSET_RESPONSE_OFFSET].copy_from_slice(&r.request_id);
+    buf[REQUEST_ID_OFFSET..OFFSET_REQUEST_OFFSET].copy_from_slice(&r.request_id);
     buf[OFFSET_REQUEST_OFFSET..LENGTH_OFFSET].copy_from_slice(&r.offset.to_be_bytes());
     buf[LENGTH_OFFSET..FILENAME_OFFSET].copy_from_slice(&r.length.to_be_bytes());
     buf[FILENAME_OFFSET..].copy_from_slice(r.filename.as_bytes());
