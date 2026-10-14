@@ -5,17 +5,15 @@ use std::path::Path;
 
 use sealed_udp::crypto::{compute_shared, generate_keypair, random_nonce};
 use sealed_udp::message::{
-    MAX_CHUNK_SIZE, Message, Request, Response, parse_message, serialize_message
+    MAX_CHUNK_SIZE, Message, Request, Response, parse_message, serialize_message,
 };
 use sealed_udp::protocol::{
-    parse_packet, serialize, DataPacket, Handshake, Packet, CONNECTION_ID_SIZE,
-    VERSION,
+    CONNECTION_ID_SIZE, DataPacket, Handshake, Packet, VERSION, parse_packet, serialize,
 };
 
 const LISTEN_ADDR: &str = "127.0.0.1:8080";
 const FILES_DIR: &str = "./files";
 const RECV_BUF_SIZE: usize = 1500;
-
 
 type ConnectionId = [u8; CONNECTION_ID_SIZE];
 
@@ -76,7 +74,7 @@ fn handle_data(socket: &UdpSocket, client_addr: &SocketAddr, packet: &DataPacket
             handle_request(socket, client_addr, packet.connection_id, &request);
         }
         _ => {}
-}
+    }
 }
 
 /// Read the requested chunk and send it back as a Response.
@@ -86,7 +84,9 @@ fn handle_request(
     connection_id: ConnectionId,
     request: &Request,
 ) {
-    let Some(data) = read_chunk(request) else { return };
+    let Some(data) = read_chunk(request) else {
+        return;
+    };
 
     let response = Message::Response(Response {
         request_id: request.request_id,
@@ -117,5 +117,5 @@ fn read_chunk(request: &Request) -> Option<Vec<u8>> {
     let len = (request.length as usize).min(MAX_CHUNK_SIZE);
     let mut data = Vec::with_capacity(len);
     file.take(len as u64).read_to_end(&mut data).ok()?;
-    return Some(data)
+    return Some(data);
 }

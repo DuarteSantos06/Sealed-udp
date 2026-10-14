@@ -4,10 +4,10 @@ use std::net::UdpSocket;
 
 use sealed_udp::crypto::{compute_shared, generate_keypair, random_connection_id, random_nonce};
 use sealed_udp::message::{
-    parse_message, serialize_message, Message, Request, Response, MAX_CHUNK_SIZE, REQUEST_ID_SIZE,
+    MAX_CHUNK_SIZE, Message, REQUEST_ID_SIZE, Request, Response, parse_message, serialize_message,
 };
 use sealed_udp::protocol::{
-    parse_packet, serialize, DataPacket, Handshake, Packet, CONNECTION_ID_SIZE, VERSION,
+    CONNECTION_ID_SIZE, DataPacket, Handshake, Packet, VERSION, parse_packet, serialize,
 };
 
 const SERVER_ADDR: &str = "127.0.0.1:8080";
@@ -70,7 +70,7 @@ fn handshake(socket: &UdpSocket) -> Option<(ConnectionId, [u8; 32])> {
         return None;
     }
 
-    return Some((conn_id, compute_shared(secret, reply.public_key)))
+    return Some((conn_id, compute_shared(secret, reply.public_key)));
 }
 
 /// Wrap a Request in a DataPacket and send it. Returns the request ID to match the reply.
@@ -95,7 +95,7 @@ fn send_request(
     });
 
     socket.send(&serialize(&packet)).ok()?;
-    return Some(request_id)
+    return Some(request_id);
 }
 
 /// Receive one packet and accept it only if it's the Response to `request_id`.
@@ -113,7 +113,7 @@ fn receive_response(socket: &UdpSocket, request_id: RequestId) -> Option<Respons
         return None;
     }
 
-    return Some(response)
+    return Some(response);
 }
 
 fn save_to_file(path: &str, data: &[u8]) {

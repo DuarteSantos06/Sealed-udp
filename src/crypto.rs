@@ -26,8 +26,6 @@ pub fn compute_shared(secret: EphemeralSecret, peer_public: [u8; PUBLIC_KEY_SIZE
     return secret.diffie_hellman(&peer).to_bytes();
 }
 
-
-pub fn encrypt (_buf: &Vec<u8>,_nonce: [u8;NONCE_SIZE], _key : [u8;PUBLIC_KEY_SIZE])
-{
-    return ;
+pub fn encrypt(_buf: &Vec<u8>, _nonce: [u8; NONCE_SIZE], _key: [u8; PUBLIC_KEY_SIZE]) {
+    return;
 }
